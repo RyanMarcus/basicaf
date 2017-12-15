@@ -1,6 +1,6 @@
 
 10 REM compute the hailstone sequence of the number
-15 FOR C = 1 TO 100
+15 FOR C = 1 TO 26
 16 LET X = C
 17 PRINT "\n", X, ": "
 20 LET MODRESULT = 0
