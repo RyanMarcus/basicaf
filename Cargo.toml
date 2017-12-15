@@ -1,7 +1,15 @@
 [package]
 name = "basicaf"
 version = "0.1.0"
+description = "A (Dartmouth) BASIC to Brainf**k compiler"
+homepage = "https://github.com/RyanMarcus/basicaf"
+repository = "https://github.com/RyanMarcus/basicaf"
 authors = ["Ryan Marcus <ryan@ryanmarc.us>"]
+
+readme = "README.md"
+
+license="GPL-3.0"
+
 
 
 [dependencies]
