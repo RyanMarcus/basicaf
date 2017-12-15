@@ -10,7 +10,10 @@ readme = "README.md"
 
 license="GPL-3.0"
 
-
+[[bin]]
+bench = false
+path = "src/main.rs"
+name = "basicaf"
 
 [dependencies]
 regex = "^0.2"
