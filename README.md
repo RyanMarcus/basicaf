@@ -1,11 +1,16 @@
 # BASIC AF
 ## A (Dartmouth) BASIC to Brainf**k Compiler
 
-[![crates.io badge](https://img.shields.io/crates/v/basicaf.svg)](https://crates.io/crates/basicaf)
+[![crates.io badge](https://img.shields.io/crates/v/basicaf.svg)](https://crates.io/crates/basicaf) [ ![Codeship Status for RyanMarcus/basicaf](https://app.codeship.com/projects/34a583d0-c386-0135-2f2a-3e1c866e82bd/status?branch=master)](https://app.codeship.com/projects/260765)
 
 This is a compiler from a variant of [Dartmouth BASIC](https://en.wikipedia.org/wiki/Dartmouth_BASIC) (see notes below) to [Brainf**k](https://en.wikipedia.org/wiki/Brainfuck). It was inspired by Peter Norvig's [BASIC interpreter "pytude"](https://github.com/norvig/pytudes/blob/master/ipynb/BASIC.ipynb) -- what easier way to interpret a language than first compiling it into an esoteric one?
 
 The compiler is written in Rust, and uses [`nom` parser combinators](https://github.com/Geal/nom), the [`clap` command line option parser](https://clap.rs/), and Saghm Rossi's [`unescape` crate](https://github.com/saghm/unescape-rs).
+
+To install:
+```bash
+cargo install basicaf
+```
 
 To compile a BASIC program:
 ```bash
