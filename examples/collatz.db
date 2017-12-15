@@ -1,0 +1,32 @@
+
+10 REM compute the hailstone sequence of the number
+15 FOR C = 1 TO 100
+16 LET X = C
+17 PRINT "\n", X, ": "
+20 LET MODRESULT = 0
+21 IF X = 1 THEN 70
+25 GOSUB 1000
+30 IF MODRESULT = 0 THEN 40
+35 IF MODRESULT = 1 THEN 50
+40 LET X = X / 2
+45 GOTO 55
+50 LET X = (3*X) + 1
+55 PRINT X, " "
+60 GOTO 20
+70 NEXT C
+80 GOTO 2000
+
+
+1000 REM start of modulo subroutine.
+1001 REM we should compute the modulo of X by 2
+1002 REM and store the result into MODRESULT
+1005 LET tmp = X
+1010 IF tmp = 0 THEN 1202
+1015 IF tmp = 1 THEN 1202
+1020 LET tmp = tmp - 2
+1025 GOTO 1010
+1202 LET MODRESULT = tmp
+1203 RETURN
+
+2000 PRINT "\n"
+2001 END
