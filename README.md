@@ -55,7 +55,7 @@ Other than that, all major features are supported, including multi-dimensional a
 
 ### Examples
 
-See the `examples/` directory for sample BASIC (`.db`) inputs and Brainf**k (`.bf`) outputs. You can run the Brainf**k output online [here](https://copy.sh/brainfuck), or using `basicaf -e`. Note that the last two examples require you to select the 32-bit cell size option.
+See the `examples/` directory for sample BASIC (`.db`) inputs and Brainf**k (`.bf`) outputs. You can run the output online [here](https://copy.sh/brainfuck), or using `basicaf -e`. Note that the last two examples require you to select the 32-bit cell size option.
 
 * [`game_of_life.db`](https://raw.githubusercontent.com/RyanMarcus/basicaf/master/examples/game_of_life.db) [(output)](https://raw.githubusercontent.com/RyanMarcus/basicaf/master/examples/game_of_life.bf) prints 10 generations of [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
 * [`fib.db`](https://raw.githubusercontent.com/RyanMarcus/basicaf/master/examples/fib.db) [(output)](https://raw.githubusercontent.com/RyanMarcus/basicaf/master/examples/fib.bf) computes the first 20 Fibonacchi numbers.
