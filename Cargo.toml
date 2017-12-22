@@ -1,6 +1,6 @@
 [package]
 name = "basicaf"
-version = "0.1.1"
+version = "0.1.2"
 description = "A (Dartmouth) BASIC to Brainf**k compiler"
 homepage = "https://github.com/RyanMarcus/basicaf"
 repository = "https://github.com/RyanMarcus/basicaf"

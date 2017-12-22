@@ -41,8 +41,8 @@ use clap::{Arg, App};
 
 fn main() {
 
-    let matches = App::new("BASIC AF")
-        .version("0.1.0")
+    let matches = App::new("BASICAF")
+        .version("0.1.2")
         .author("Ryan Marcus <ryan@ryanmarc.us>")
         .about("A BASIC to Brainf**k compiler, https://github.com/RyanMarcus/basicaf")
         .arg(Arg::with_name("semcom")
