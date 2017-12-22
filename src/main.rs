@@ -17,7 +17,10 @@
 // along with basicaf.  If not, see <http://www.gnu.org/licenses/>.
 // 
 // < end copyright > 
- 
+
+#![allow(unknown_lints)] // for clippy
+#![allow(explicit_iter_loop,needless_return)]
+
 #[macro_use]
 extern crate nom;
 extern crate unescape;
@@ -95,13 +98,15 @@ fn main() {
         println!("{}", result);
         return;
     }
-    
-    let s = match gv {
-        true => compile::to_graphviz(contents),
-        false => compile::compile(contents, sem_comments,
-                                  ir_comments,
-                                  !no_opt)
+
+    let s = if gv {
+        compile::to_graphviz(contents)
+    } else {
+        compile::compile(contents, sem_comments,
+                         ir_comments,
+                         !no_opt)
     };
+    
     
     println!("{}", s);
     

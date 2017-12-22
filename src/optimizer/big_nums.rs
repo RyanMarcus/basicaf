@@ -41,7 +41,7 @@ pub struct Product { }
 impl NumStrategy for Product {
     fn for_num(&self, num: u32) -> (String, usize) {
         // find the sqrt...
-        let mut sqrt = (num as f64).sqrt().floor() as u32;
+        let mut sqrt = (f64::from(num)).sqrt().floor() as u32;
 
         while num % sqrt != 0 && sqrt <= num {
             sqrt += 1;
@@ -73,7 +73,7 @@ pub struct NearestPerfectSquare { }
 impl NumStrategy for NearestPerfectSquare {
     fn for_num(&self, num: u32) -> (String, usize) {
         // find the sqrt...
-        let sqrt = (num as f64).sqrt().floor() as u32;
+        let sqrt = (f64::from(num)).sqrt().floor() as u32;
 
         // find the nearest perfect square
         let ps = sqrt * sqrt;

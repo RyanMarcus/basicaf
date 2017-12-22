@@ -72,6 +72,9 @@ fn to(dest: u32) -> BFQuad {
     return BFQuad::To( dest );
 }
 
+// Clippy complains, but there's nothing we can do about this
+// giant match statement.
+#[cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
 fn emit_step(quad: BFQuad, comment: bool) -> Vec<BFQuad> {
 
     let mut vec = Vec::new();
@@ -543,12 +546,9 @@ fn emit_step(quad: BFQuad, comment: bool) -> Vec<BFQuad> {
             }
         },
 
-        BFQuad::Comment(_) => {
+        BFQuad::Comment(_)
+            | BFQuad::RawBFStr(_) => {
                 vec.push(quad);
-        },
-
-        BFQuad::RawBFStr(_) => {
-            vec.push(quad);
         }
 
         
@@ -573,15 +573,9 @@ fn resolve_tos(quads: Vec<BFQuad>) -> Vec<BFQuad> {
                 //vec.push(BFQuad::Comment(String::from(format!("(now at {})", curr))));
             },
 
-            BFQuad::RawBF(_) => {
-                vec.push(quad);
-            },
-
-            BFQuad::RawBFStr(_) => {
-                vec.push(quad);
-            },
-
-            BFQuad::Comment(_) => {
+            BFQuad::RawBF(_)
+                | BFQuad::RawBFStr(_)
+                | BFQuad::Comment(_) => {
                 vec.push(quad);
             },
 
@@ -603,9 +597,10 @@ fn emit(quad: BFQuad, quad_comments: bool, sem_comments: bool) -> Vec<BFQuad> {
         let mut did_mod = false;
         for x in vec {
             let to_add = match x {
-                BFQuad::RawBF(_) => vec![x],
-                BFQuad::To(_) => vec![x],
-                BFQuad::RawBFStr(_) => vec![x],
+                BFQuad::RawBF(_)
+                    | BFQuad::To(_)
+                    | BFQuad::RawBFStr(_) => vec![x],
+                
                 BFQuad::Comment(_) => {
                     if sem_comments {
                         vec![x]
@@ -669,12 +664,12 @@ pub fn create_string(quads: Vec<BFQuad>) -> String {
 
             BFQuad::Comment(comment) => {
                 let tmp = comment.as_str();
-                if tmp.contains("+")
-                    || tmp.contains("-")
-                    || tmp.contains("[")
-                    || tmp.contains("]")
-                    || tmp.contains("<")
-                    || tmp.contains(">")
+                if tmp.contains('+')
+                    || tmp.contains('-')
+                    || tmp.contains('[')
+                    || tmp.contains(']')
+                    || tmp.contains('<')
+                    || tmp.contains('>')
                 {
                     panic!("Comment contained a BF instruction: {}", comment);
                 }

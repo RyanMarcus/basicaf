@@ -47,68 +47,59 @@ pub fn to_ir(blocks: Vec<Block>, const_opt: bool) -> Vec<BFQuad> {
     return ir_gen.get_ir();
 }
 
-pub fn to_graphviz(blocks: Vec<Block>) -> String{
+pub fn to_graphviz(blocks: &[Block]) -> String{
     let mut w = Vec::new();
 
     write!(&mut w, "digraph G {{\n").unwrap();
 
     for (idx, b) in blocks.iter().enumerate() {
-        match b.is_loop {
-            false => {
-                let lno_last;
-                let cmd_last;
-                {
-                    let last = get_last_cmd!(b);
-                    lno_last = last.ln;
-                    cmd_last = last.cmd;
-                }
-                
-                let lno_first;
-                {
-                    let first = get_first_cmd!(b);
-                    lno_first = first.ln;
-                }
-                
-                write!(&mut w, "{} [label=\"{}: {} - {} ({})\"];\n",
-                       idx, idx, lno_first, lno_last,
-                       cmd_last.get_string_type()).unwrap();
-            },
-
-            true => {
-                write!(&mut w, "{} [label=\"Loop\"];\n",
-                       idx).unwrap();
+        if b.is_loop {
+            let lno_last;
+            let cmd_last;
+            {
+                let last = get_last_cmd!(b);
+                lno_last = last.ln;
+                cmd_last = last.cmd;
             }
-        };
+            
+            let lno_first;
+            {
+                let first = get_first_cmd!(b);
+                lno_first = first.ln;
+            }
+            
+            write!(&mut w, "{} [label=\"{}: {} - {} ({})\"];\n",
+                   idx, idx, lno_first, lno_last,
+                   cmd_last.get_string_type()).unwrap();
+        } else {
+
+            write!(&mut w, "{} [label=\"Loop\"];\n",
+                   idx).unwrap();
+        }
+
     }
 
     for (idx, b) in blocks.iter().enumerate() {
-        match b.is_loop {
-            true => {
-                for out_blk in b.out_blocks.iter() {
-                    write!(&mut w, "{} -> {};\n", idx, out_blk).unwrap();
-                }
-            },
-
-            false => {
-                match b.special_out {
-                    SpecialOut::Next (pos) => {
-                        write!(&mut w, "{} -> {} [style=dotted];\n",
-                               idx, pos).unwrap();
-                    },
-
-                    SpecialOut::Return (pos) => {
-                        write!(&mut w, "{} -> {} [style=dotted];\n",
-                               idx, pos).unwrap();
-                    }
-
-                    SpecialOut::None => {}
-                };
-
-                for out_blk in b.out_blocks.iter() {
-                    write!(&mut w, "{} -> {};\n", idx, out_blk).unwrap();
-                }
+        if b.is_loop {
+            for out_blk in b.out_blocks.iter() {
+                write!(&mut w, "{} -> {};\n", idx, out_blk).unwrap();
             }
-        };
+        } else {
+            
+
+            match b.special_out {
+                SpecialOut::Next (pos) | SpecialOut::Return(pos) => {
+                    write!(&mut w, "{} -> {} [style=dotted];\n",
+                           idx, pos).unwrap();
+                },
+                
+                SpecialOut::None => {}
+            };
+
+            for out_blk in b.out_blocks.iter() {
+                write!(&mut w, "{} -> {};\n", idx, out_blk).unwrap();
+            }
+        }
     }
 
     write!(&mut w, "}}\n").unwrap();

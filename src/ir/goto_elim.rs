@@ -23,7 +23,7 @@ use ir::blockgen::{Block};
 
 
 
-pub fn find_dominated_nodes(stmts: &Vec<Block>, idx: usize)
+pub fn find_dominated_nodes(stmts: &[Block], idx: usize)
                             -> HashSet<usize>
 {
     let mut unreachable = HashSet::new();
@@ -56,7 +56,7 @@ pub fn find_dominated_nodes(stmts: &Vec<Block>, idx: usize)
     return unreachable;
 }
 
-pub fn build_dominated_sets(stmts: &Vec<Block>)
+pub fn build_dominated_sets(stmts: &[Block])
                             -> HashMap<usize, HashSet<usize>>
 {
     let mut to_r = HashMap::new();
@@ -68,7 +68,7 @@ pub fn build_dominated_sets(stmts: &Vec<Block>)
     return to_r;
 }
 
-pub fn get_reverse_postorder(stmts: &Vec<Block>)
+pub fn get_reverse_postorder(stmts: &[Block])
                              -> HashMap<usize, usize>
 {
     let mut to_r = HashMap::new();
@@ -98,7 +98,7 @@ pub fn get_reverse_postorder(stmts: &Vec<Block>)
 
 }
 
-pub fn get_back_edges(stmts: &Vec<Block>,
+pub fn get_back_edges(stmts: &[Block],
                       rpo: &HashMap<usize, usize>,
                       dom: &HashMap<usize, HashSet<usize>>)
                       -> HashSet<(usize, usize)>
@@ -131,7 +131,7 @@ enum DFSColor {
     White, Gray, Black
 }
 
-fn ensure_reducable(stmts: &Vec<Block>,
+fn ensure_reducable(stmts: &[Block],
                     back_edges: &HashSet<(usize, usize)>,
                     colors: &mut HashMap<usize, DFSColor>,
                     idx: usize) {
@@ -167,7 +167,7 @@ fn ensure_reducable(stmts: &Vec<Block>,
 }
 
 
-fn reachable(stmts: &Vec<Block>,
+fn reachable(stmts: &[Block],
              known_loop_nodes: &HashSet<usize>,
              dest: usize,
              src: usize,
@@ -211,7 +211,7 @@ fn reachable(stmts: &Vec<Block>,
 }
              
 
-fn get_nodes_for_back_edge(stmts: &Vec<Block>,
+fn get_nodes_for_back_edge(stmts: &[Block],
                            edge: &(usize, usize))
                            -> HashSet<usize>
 {
@@ -242,7 +242,7 @@ fn get_nodes_for_back_edge(stmts: &Vec<Block>,
     return loop_nodes;
 }
 
-fn collect_loop_exits(stmts: &Vec<Block>,
+fn collect_loop_exits(stmts: &[Block],
                       loop_nodes: &HashSet<usize>)
                       -> Vec<usize>
 {
@@ -265,21 +265,21 @@ fn collect_loop_exits(stmts: &Vec<Block>,
 
 
 pub fn eliminate_gotos(stmts: &mut Vec<Block>) {
-    let dominated = build_dominated_sets(&stmts);
-    let rpo = get_reverse_postorder(&stmts);
-    let back_edges = get_back_edges(&stmts, &rpo, &dominated);
+    let dominated = build_dominated_sets(stmts);
+    let rpo = get_reverse_postorder(stmts);
+    let back_edges = get_back_edges(stmts, &rpo, &dominated);
 
     let mut colors = HashMap::new();
     for i in 0..stmts.len() {
         colors.insert(i, DFSColor::White);
     }
-    ensure_reducable(&stmts, &back_edges,
+    ensure_reducable(stmts, &back_edges,
                      &mut colors, 0);
 
 
     for ed in back_edges.iter() {
-        let loop_nodes = get_nodes_for_back_edge(&stmts, ed);
-        let exit_nodes = collect_loop_exits(&stmts, &loop_nodes);
+        let loop_nodes = get_nodes_for_back_edge(stmts, ed);
+        let exit_nodes = collect_loop_exits(stmts, &loop_nodes);
         let (_end, header) = *ed;
 
         let mut loop_block = Block::new_loop(exit_nodes, loop_nodes);

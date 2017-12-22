@@ -43,7 +43,7 @@ pub enum DBStmt {
     DIM { arrays: Vec<DBArrayDef> },
     END,
     FOR { varname: String, from_expr: DBExpr, to_expr: DBExpr,
-          step_expr: Option<DBExpr> },
+          step_expr: Box<Option<DBExpr>> }, // boxing the step for memory layout
     NEXT { varname: String },
     GOSUB { lineno: u32 },
     RETURN,

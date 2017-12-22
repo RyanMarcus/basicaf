@@ -19,6 +19,7 @@
 // < end copyright > 
  
 use std::char;
+use std::mem::{drop};
 
 mod full_tests;
 
@@ -74,11 +75,11 @@ impl BFEnv {
         return None;
     }
 
-    fn find_matching_close(open: usize, prgm: &Vec<char>) -> usize {
+    fn find_matching_close(open: usize, prgm: &[char]) -> usize {
         let mut count = 0;
 
-        for pos in open..prgm.len() {
-            count += match prgm[pos] {
+        for (pos, item) in prgm.iter().enumerate().skip(open) {
+            count += match *item {
                 '[' => 1,
                 ']' => -1,
                 _ => 0
@@ -93,7 +94,7 @@ impl BFEnv {
                open);
     }
 
-    fn find_matching_open(close: usize, prgm: &Vec<char>) -> usize {
+    fn find_matching_open(close: usize, prgm: &[char]) -> usize {
         let mut count = 1;
 
         for pos in (0..close).rev() {
@@ -117,6 +118,11 @@ impl BFEnv {
         let program = {
             let mut p = Vec::new();
             p.extend(source.chars());
+            
+            // there doesn't seem to be a `into_chars`, so we will
+            // manually drop source here.
+            drop(source);
+            
             p
         };
         
@@ -142,10 +148,10 @@ impl BFEnv {
 
                 _ => {
                     let res = self.execute_single(program[pc]);
-                    match res {
-                        Some(s) => result.push_str(s.as_str()),
-                        None => {}
-                    };
+                    
+                    if let Some(s) = res {
+                        result.push_str(s.as_str());
+                    }
                     
                     pc += 1;
                 }

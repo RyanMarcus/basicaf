@@ -117,63 +117,62 @@ impl BlockToIR {
     fn block_to_ir(&mut self, block: usize) {
         let is_loop = self.blocks[block].is_loop;
         
-        let should_be_end = match is_loop {
-            true => {
-                // we are starting a loop!
-                let loop_var = get_and_zero!(self);
-                let cond_var = get_and_zero!(self);
-                comment!(self, format!("Starting loop: cond_var is {} and loop_var is {}",
-                                       cond_var, loop_var));
+        let should_be_end = if is_loop {
+            // we are starting a loop!
+            let loop_var = get_and_zero!(self);
+            let cond_var = get_and_zero!(self);
+            comment!(self, format!("Starting loop: cond_var is {} and loop_var is {}",
+                                   cond_var, loop_var));
 
-                self.loop_stack.push((block, loop_var, cond_var));
+            self.loop_stack.push((block, loop_var, cond_var));
 
-                self.ir.push(BFQuad::To(loop_var));
-                self.ir.push(BFQuad::Constant(1));
-                self.ir.push(BFQuad::RawBF("["));
-                comment!(self, "start of loop body");
-                let oblock = self.blocks[block].out_blocks[0];
-                self.block_to_ir(oblock);
-                comment!(self, "end of loop body");
-                self.ir.push(BFQuad::To(loop_var));
-                self.ir.push(BFQuad::RawBF("]"));
-                             
-                self.loop_stack.pop();
-                comment!(self, "Finished loop code: now checking exit conditions");
-                
-                // depending on the value of the loop_var, we need to branch to a
-                // specific place.
-                let loop_exits = self.blocks[block].loop_exits.clone();
-                for (idx, out_blk) in loop_exits.iter().enumerate() {
-                    comment!(self, format!("Checking loop condition {}", idx + 1));
-                    let cond = get_and_zero!(self);
-                    let t1 = get_and_zero!(self);
-                    let t2 = get_and_zero!(self);
-                    let v = get_and_zero!(self);
-                    
-                    self.ir.push(BFQuad::To(v));
-                    self.ir.push(BFQuad::Constant(idx as u32 + 1));
-                    self.ir.push(BFQuad::Equal(cond_var, v, cond, t1, t2));
-                    
-                    comment!(self, "if loop condition is true: taking this exit");
-                    self.ir.push(BFQuad::If(cond));
-                    self.block_to_ir(*out_blk);
-                    self.ir.push(BFQuad::EndIf(cond));
-                    comment!(self, format!("end if for loop condition {}", idx + 1));
-
-                    self.alloc.free(cond);
-                    self.alloc.free(t1);
-                    self.alloc.free(t2);
-                    self.alloc.free(v);
-                }
-                self.alloc.free(loop_var);
-                self.alloc.free(cond_var);
-
-                comment!(self, format!("Loop complete with loop_var={}", loop_var));
-                
-                true
-            },
+            self.ir.push(BFQuad::To(loop_var));
+            self.ir.push(BFQuad::Constant(1));
+            self.ir.push(BFQuad::RawBF("["));
+            comment!(self, "start of loop body");
+            let oblock = self.blocks[block].out_blocks[0];
+            self.block_to_ir(oblock);
+            comment!(self, "end of loop body");
+            self.ir.push(BFQuad::To(loop_var));
+            self.ir.push(BFQuad::RawBF("]"));
             
-            false => self.emit_non_loop(block)
+            self.loop_stack.pop();
+            comment!(self, "Finished loop code: now checking exit conditions");
+            
+            // depending on the value of the loop_var, we need to branch to a
+            // specific place.
+            let loop_exits = self.blocks[block].loop_exits.clone();
+            for (idx, out_blk) in loop_exits.iter().enumerate() {
+                comment!(self, format!("Checking loop condition {}", idx + 1));
+                let cond = get_and_zero!(self);
+                let t1 = get_and_zero!(self);
+                let t2 = get_and_zero!(self);
+                let v = get_and_zero!(self);
+                
+                self.ir.push(BFQuad::To(v));
+                self.ir.push(BFQuad::Constant(idx as u32 + 1));
+                self.ir.push(BFQuad::Equal(cond_var, v, cond, t1, t2));
+                
+                comment!(self, "if loop condition is true: taking this exit");
+                self.ir.push(BFQuad::If(cond));
+                self.block_to_ir(*out_blk);
+                self.ir.push(BFQuad::EndIf(cond));
+                comment!(self, format!("end if for loop condition {}", idx + 1));
+
+                self.alloc.free(cond);
+                self.alloc.free(t1);
+                self.alloc.free(t2);
+                self.alloc.free(v);
+            }
+            self.alloc.free(loop_var);
+            self.alloc.free(cond_var);
+
+            comment!(self, format!("Loop complete with loop_var={}", loop_var));
+            
+            true
+        } else {
+            
+            self.emit_non_loop(block)
         };
         
         
@@ -250,7 +249,7 @@ impl BlockToIR {
                                              self.alloc.reserve());
                     }
                     
-                    let var_pos = *(self.symbol_t.get(varname).unwrap());
+                    let var_pos = self.symbol_t[varname];
                     
                     // initialize the variable
                     {
@@ -366,13 +365,9 @@ impl BlockToIR {
                                 .position(|&e| e == return_loc as usize)
                         };
 
-                        match index {
-                            Some (pos) => {
-                                mark_loop_done!(self, loop_var, cond_var, pos);
-                            },
-
-                            None => { }
-                        };
+                        if let Some(pos) = index {
+                            mark_loop_done!(self, loop_var, cond_var, pos);
+                        }
                     }
                     should_be_end = true;
                 },
@@ -513,7 +508,7 @@ impl BlockToIR {
                 },
                 
                 DBStmt::PRINT { ref seq } => {
-                    comment!(self, format!("Printing"));
+                    comment!(self, "Printing");
                     for expr in seq {
                         let code = self.ir_for_print(expr);
                         self.ir.extend(code);
@@ -537,7 +532,7 @@ impl BlockToIR {
                                          self.alloc.reserve());
                 }
                 
-                let var_pos = *(self.symbol_t.get(varname).unwrap());
+                let var_pos = self.symbol_t[varname];
                 let (loc, code) = self.ir_for_expression(expr);
                 self.ir.extend(code);
                 
@@ -571,7 +566,7 @@ impl BlockToIR {
         };
         
         
-        comment!(self, format!("End of LET"));
+        comment!(self, "End of LET");
         
     }
 
@@ -583,8 +578,8 @@ impl BlockToIR {
                    indexing_expressions.varname);
         }
         
-        let (adef, arr_pos) = self.array_t.get(&indexing_expressions.varname)
-            .unwrap().clone();
+        let (adef, arr_pos) = self.array_t[&indexing_expressions.varname]
+            .clone();
 
         let mut to_r = Vec::new();
         let mut dim_indexes = Vec::new();
@@ -688,7 +683,7 @@ impl BlockToIR {
 
                         let t1 = self.alloc.reserve();
 
-                        to_r.push(BFQuad::Zero(tmp_start + 0));
+                        to_r.push(BFQuad::Zero(tmp_start)); // + 0
                         to_r.push(BFQuad::Zero(tmp_start + 1));
                         to_r.push(BFQuad::Zero(tmp_start + 2));
                         to_r.push(BFQuad::Zero(tmp_start + 3));
@@ -700,7 +695,7 @@ impl BlockToIR {
                         to_r.push(BFQuad::Zero(t1));
                         to_r.push(BFQuad::AddTo(e2l, tmp_start + 2, t1));
 
-                        to_r.push(BFQuad::Div(tmp_start + 0,
+                        to_r.push(BFQuad::Div(tmp_start, // + 0
                                               tmp_start + 1,
                                               tmp_start + 2,
                                               tmp_start + 3,
@@ -714,7 +709,7 @@ impl BlockToIR {
                                                 loc, t1));
 
                         self.alloc.free(t1);
-                        self.alloc.free(tmp_start + 0);
+                        self.alloc.free(tmp_start); // + 0
                         self.alloc.free(tmp_start + 1);
                         self.alloc.free(tmp_start + 2);
                         self.alloc.free(tmp_start + 3);
@@ -768,33 +763,29 @@ impl BlockToIR {
             panic!("BF does not support negative values!");
         }
         
-        return match self.const_opt {
-            false => {
-                let dest = self.alloc.reserve();
-                to_r.push(BFQuad::Zero(dest));
-                to_r.push(BFQuad::To(dest));
-                to_r.push(BFQuad::Constant(val as u32));
-                (dest, to_r)
-            },
-            
-            true => {
-                let (code, size) = optimizer::optimized_constant(val as u32);
-                let dest = self.alloc.reserve_range(size as u32);
-                for i in dest..dest+(size as u32) {
-                    to_r.push(BFQuad::Zero(i));
-                }
-                to_r.push(BFQuad::To(dest));
-                to_r.push(BFQuad::RawBFStr(code));
-                for i in dest+1..dest+(size as u32) {
-                    self.alloc.free(i);
-                }
-                
-                (dest, to_r)
+        if self.const_opt {            
+            let (code, size) = optimizer::optimized_constant(val as u32);
+            let dest = self.alloc.reserve_range(size as u32);
+            for i in dest..dest+(size as u32) {
+                to_r.push(BFQuad::Zero(i));
             }
-        };
+            to_r.push(BFQuad::To(dest));
+            to_r.push(BFQuad::RawBFStr(code));
+            for i in dest+1..dest+(size as u32) {
+                self.alloc.free(i);
+            }
+            
+            return (dest, to_r);
+        } else {
+            let dest = self.alloc.reserve();
+            to_r.push(BFQuad::Zero(dest));
+            to_r.push(BFQuad::To(dest));
+            to_r.push(BFQuad::Constant(val as u32));
+            return (dest, to_r);
+        }
     }
 
-    fn ir_for_var(&mut self, varname: &String) -> (u32, Vec<BFQuad>) {
+    fn ir_for_var(&mut self, varname: &str) -> (u32, Vec<BFQuad>) {
         let mut to_r = Vec::new();
         let varloc = *(self.symbol_t.get(varname)
                        .expect(format!("Variable {} is not defined!", varname).as_str()));

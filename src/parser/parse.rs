@@ -73,7 +73,7 @@ named!(ast_term<&[u8], Expr>,
            
            complete!(db_array_dim) => { |x| Expr::A(x) } |
            complete!(line_number) => { |x| Expr::N(x as i32) } |
-           complete!(db_name) => { |x| Expr::V(String::from(x)) }
+           complete!(db_name) => { |x| Expr::V(x) }
            )
        );
 
@@ -122,7 +122,7 @@ named!(db_array_dim<&[u8], DBArrayDef>,
                                                  ast_expr)
                                                  
                >> tag!(")")
-               >> (DBArrayDef { varname: String::from(name),
+               >> (DBArrayDef { varname: name,
                                 dims: dims } )
                                           
            )
@@ -140,8 +140,8 @@ named!(db_def_stmt<&[u8], DBStmt>,
                >> ws!(tag!("="))
                >> expr: db_expr
                >> line_ending
-               >> ( DBStmt::DEF{funcname: String::from(fname),
-                                varname: String::from(vname),
+               >> ( DBStmt::DEF{funcname: fname,
+                                varname: vname,
                                 expr: expr} )
                )
        );
@@ -190,10 +190,10 @@ named!(db_for_stmt<&[u8], DBStmt>,
                              >> ( to_r )
                              ))
                >> line_ending
-               >> (DBStmt::FOR{ varname: String::from(var),
+               >> (DBStmt::FOR{ varname: var,
                                 from_expr: from,
                                 to_expr: to,
-                                step_expr: step })
+                                step_expr: Box::new(step) })
                )
        );
 
@@ -203,7 +203,7 @@ named!(db_next_stmt<&[u8], DBStmt>,
            ws!(tag!("NEXT"))
                >> var: db_name
                >> line_ending
-               >> (DBStmt::NEXT{ varname: String::from(var) })
+               >> (DBStmt::NEXT{ varname: var })
                )
        );
 
@@ -292,7 +292,7 @@ named!(db_data_stmt<&[u8], DBStmt>,
 named!(let_target<&[u8], DBLetTarget>,
        alt!(
            complete!(db_array_dim) => { |x| DBLetTarget::ARR(x) } |
-           complete!(db_name) =>  { |x| DBLetTarget::VAR(String::from(x)) }
+           complete!(db_name) =>  { |x| DBLetTarget::VAR(x) }
            )
        );
 
@@ -373,11 +373,11 @@ pub fn parse_bytes(to_parse: &[u8]) -> Vec<DBCommand> {
         IResult::Done(_, value) => value,
         IResult::Error(err) => {
             println!("Err {:?}",err);
-            panic!();
+            panic!()
         },
         IResult::Incomplete(needed) => {
             println!("Needed {:?}",needed);
-            panic!();
+            panic!()
         }
     };
 

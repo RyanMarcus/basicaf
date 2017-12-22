@@ -26,7 +26,7 @@ use codegen;
 pub fn compile(prgm: String, semcom: bool, ircom: bool, opts: bool) 
                -> String
 {
-    let parsed = parser::parse_bytes(prgm.as_bytes());
+    let parsed = parser::parse_bytes(&prgm.into_bytes());
 
     let mut blocks = ir::to_blocks(parsed);
 
@@ -43,11 +43,9 @@ pub fn compile(prgm: String, semcom: bool, ircom: bool, opts: bool)
 
 
 pub fn to_graphviz(prgm: String) -> String {
-    let parsed = parser::parse_bytes(prgm.as_bytes());
-
+    let parsed = parser::parse_bytes(&prgm.into_bytes());
     let mut blocks = ir::to_blocks(parsed);
-
     ir::elim_gotos(&mut blocks);
     
-    return ir::to_graphviz(blocks);
+    return ir::to_graphviz(&blocks);
 }

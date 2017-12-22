@@ -105,22 +105,16 @@ enum BlockSplitType {
     NoBreak, BreakAfter, BreakBefore, BreakBoth
 }
 
-pub fn get_goto_targets(stmts: &Vec<DBCommand>) -> HashSet<u32> {
+pub fn get_goto_targets(stmts: &[DBCommand]) -> HashSet<u32> {
     let mut goto_targets = HashSet::new();
     for cmd in stmts.iter() {
         match cmd.cmd {
-            DBStmt::GOSUB { lineno } => {
-                goto_targets.insert(lineno);
-            },
-                
-            DBStmt::IF{ lineno, .. } => {
+            DBStmt::GOSUB { lineno }
+            | DBStmt::IF { lineno, .. }
+            | DBStmt::GOTO { lineno } => {
                 goto_targets.insert(lineno);
             },
             
-            DBStmt::GOTO{ lineno } => {
-                goto_targets.insert(lineno);
-            },
-
             _ => { }
         };
     }
@@ -128,20 +122,16 @@ pub fn get_goto_targets(stmts: &Vec<DBCommand>) -> HashSet<u32> {
     return goto_targets;
 }
 
-fn get_all_program_data(stmts: &Vec<DBCommand>)
+fn get_all_program_data(stmts: &[DBCommand])
                         -> Vec<u32>
 {
     let mut to_r = Vec::new();
     for cmd in stmts.iter() {
-        match cmd.cmd {
-            DBStmt::DATA{ seq: ref data } => {
-                for flt in data.iter() {
-                    to_r.push(*flt as u32);
-                }
-            },
-
-            _ => {}
-        };
+        if let DBStmt::DATA { seq: ref data } = cmd.cmd {
+            for flt in data.iter() {
+                to_r.push(*flt as u32);
+            }
+        }
     }
 
     return to_r;
@@ -158,11 +148,10 @@ pub fn to_blocks(stmts: Vec<DBCommand>)
     let mut data = get_all_program_data(&all_stmts);
     data.reverse();
 
-    for ref mut cmd in all_stmts.iter_mut() {
+    for cmd in all_stmts.iter_mut() {
         let num_data_items = match cmd.cmd {
             DBStmt::READ { varnames: ref x } => {
-                let length = x.len();
-                length
+                x.len()
             },
 
             _ => {0}
@@ -212,13 +201,9 @@ pub fn to_blocks(stmts: Vec<DBCommand>)
 
         if goto_targets.contains(&cmd.ln) {
             new_block = match new_block {
-                BlockSplitType::NoBreak =>
+                BlockSplitType::NoBreak | BlockSplitType::BreakBefore =>
                     BlockSplitType::BreakBefore,
-                BlockSplitType::BreakBefore =>
-                    BlockSplitType::BreakBefore,
-                BlockSplitType::BreakAfter =>
-                    BlockSplitType::BreakBoth,
-                BlockSplitType::BreakBoth =>
+                BlockSplitType::BreakAfter | BlockSplitType::BreakBoth =>
                     BlockSplitType::BreakBoth
             };
         }
@@ -321,21 +306,17 @@ pub fn link_blocks (blocks: &mut Vec<Block>) {
                 let mut found_match = false;
                 for j in i+1..blocks.len() - 1 {                    
                     let cand_last = get_last_cmd!(blocks[j]);
-                    match cand_last.cmd {
-                        DBStmt::NEXT { ref varname } => {
-                            if parent_varname.trim() == varname.trim() {
-                                found_match = true;
-                                blocks[j].special_out = SpecialOut::Next(i);
-                                
-                                blocks[i].add_in_block(j);
-                                
-                                blocks[i].add_out_block(j+1);
-                                blocks[j+1].add_in_block(i);
-                                break;
-                            }
-                        },
-
-                        _ => {}
+                    if let DBStmt::NEXT { ref varname } = cand_last.cmd {
+                        if parent_varname.trim() == varname.trim() {
+                            found_match = true;
+                            blocks[j].special_out = SpecialOut::Next(i);
+                            
+                            blocks[i].add_in_block(j);
+                            
+                            blocks[i].add_out_block(j+1);
+                            blocks[j+1].add_in_block(i);
+                            break;
+                        }
                     }
                 }
                 
@@ -360,9 +341,9 @@ pub fn link_blocks (blocks: &mut Vec<Block>) {
                 // add the approp lineno to our outlist
                 // then, add the line after us to our outlist
 
-                let out_block = lno_map.get(lineno)
-                    .expect("Could not find matching lineno for GOSUB")
-                    .clone();
+                let out_block = *lno_map.get(lineno)
+                    .expect("Could not find matching lineno for GOSUB");
+
 
                 // check to make sure there is a return...
                 let mut found_matching = false;
@@ -380,40 +361,45 @@ pub fn link_blocks (blocks: &mut Vec<Block>) {
                         continue;
                     }
 
-                    match last.cmd {
-                        DBStmt::RETURN => {
-                            if !blocks[j].out_blocks.is_empty() {
-                                // TODO copy all the blocks from out_block
-                                // to j. Add them to the end of the block
-                                // list. Link to those.
-                                let mut copy = Vec::new();
-
-                                for i in out_block..j+1 {
-                                    copy.push(blocks[i].clone());
-                                }
-
-
-
-                                let num_copied = copy.len();
-                                let curr_blocks = blocks.len();
-                                copy[0].clear_in_blocks();
-                                copy[num_copied-1].clear_out_blocks();
-                                
-                                blocks.extend(copy);
-
-                                subroutine_start = curr_blocks;
-                                subroutine_return = blocks.len()-1;
-                                found_matching = true;
-                                break;
-                            } else {
-                                subroutine_start = out_block;
-                                subroutine_return = j;
-                                found_matching = true;
-                                break;
+                    if let DBStmt::RETURN = last.cmd {
+                        if !blocks[j].out_blocks.is_empty() {
+                            // TODO copy all the blocks from out_block
+                            // to j. Add them to the end of the block
+                            // list. Link to those.
+                            let mut copy = Vec::new();
+                            
+                            
+                            // Clippy suggests using an iterator,
+                            // but this seems much cleaner than
+                            // the alternative:
+                            // blocks.iter().take(j+1).skip(out_block)
+                            #[cfg_attr(feature = "cargo-clippy",
+                                       allow(needless_range_loop))]
+                            for i in out_block..j+1 {
+                                copy.push(blocks[i].clone());
                             }
-                        },
-                        _ => {}
+                            
+
+
+                            let num_copied = copy.len();
+                            let curr_blocks = blocks.len();
+                            copy[0].clear_in_blocks();
+                            copy[num_copied-1].clear_out_blocks();
+                            
+                            blocks.extend(copy);
+                            
+                            subroutine_start = curr_blocks;
+                            subroutine_return = blocks.len()-1;
+                            found_matching = true;
+                            break;
+                        } else {
+                            subroutine_start = out_block;
+                            subroutine_return = j;
+                            found_matching = true;
+                            break;
+                        }
                     }
+                
 
                 }
                                 
@@ -434,12 +420,9 @@ pub fn link_blocks (blocks: &mut Vec<Block>) {
                 FollowType::NextLineDoesNotFollow
             },
 
-            DBStmt::RETURN => FollowType::NextLineDoesNotFollow,
-
             DBStmt::GOTO { ref lineno } => {
-                let out_block = lno_map.get(lineno)
-                    .expect("Could not find line used by GOTO")
-                    .clone();
+                let out_block = *lno_map.get(lineno)
+                    .expect("Could not find line used by GOTO");
 
                 blocks[out_block].add_in_block(i);
                 blocks[i].add_out_block(out_block);
@@ -450,9 +433,8 @@ pub fn link_blocks (blocks: &mut Vec<Block>) {
 
             DBStmt::IF { ref lineno, .. } => {
                 // add the true branch as an output
-                let out_block = lno_map.get(lineno)
-                    .expect("Could not find line used by IF")
-                    .clone();
+                let out_block = *lno_map.get(lineno)
+                    .expect("Could not find line used by IF");
 
                 blocks[out_block].add_in_block(i);
                 blocks[i].add_out_block(out_block);
@@ -460,29 +442,26 @@ pub fn link_blocks (blocks: &mut Vec<Block>) {
                 FollowType::NextLineFollows
             },
 
-            DBStmt::END => FollowType::NextLineDoesNotFollow,
+            DBStmt::END | DBStmt::RETURN => FollowType::NextLineDoesNotFollow,
 
             _ => FollowType::NextLineFollows
         };
 
 
-        match nl {
-            FollowType::NextLineFollows => {
-                if i + 1 > blocks.len() {
-                    panic!("Program does not end with an END statement!");
-                }
-                
-                blocks[i].add_out_block(i+1);
-                blocks[i+1].add_in_block(i);
-            },
+        if let FollowType::NextLineFollows = nl {
+            if i + 1 > blocks.len() {
+                panic!("Program does not end with an END statement!");
+            }
+            
+            blocks[i].add_out_block(i+1);
+            blocks[i+1].add_in_block(i);
+        }
 
-            _ => {}
-        };
         i += 1;
     }
 }
 
-fn ensure_no_dead_code(blocks: &Vec<Block>) {
+fn ensure_no_dead_code(blocks: &[Block]) {
     for i in blocks.iter() {
         if !i.root && i.in_blocks.is_empty() {
             let last = get_last_cmd!(i);
