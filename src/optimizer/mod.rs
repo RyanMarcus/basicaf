@@ -28,11 +28,11 @@ pub fn optimized_constant(num: u32) -> (String, usize)
         return (String::from(""), 1);
     }
     
-    let optimizers: Vec<Box<NumStrategy>> = vec![
-        Box::new(SimpleConstant {}),
-        Box::new(Product {}),
-        Box::new(NearestPerfectSquare {})
-        ];
+    let optimizers: Vec<&NumStrategy> = vec![
+        &SimpleConstant {},
+        &Product {},
+        &NearestPerfectSquare {}
+    ];
 
     let best = optimizers.iter()
         .map(|opt| opt.for_num(num))
