@@ -1,31 +1,41 @@
-// < begin copyright > 
+// < begin copyright >
 // Copyright Ryan Marcus 2017
-// 
+//
 // This file is part of basicaf.
-// 
+//
 // basicaf is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // basicaf is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with basicaf.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// < end copyright > 
- 
-pub trait NumStrategy {
-    fn for_num(&self, num: u32) -> (String, usize);
+//
+// < end copyright >
+
+pub enum NumberStrategy {
+    Simple,
+    Product,
+    NearestPerfectSquare,
 }
 
-pub struct SimpleConstant { }
+impl NumberStrategy {
+    pub fn for_num(&self, num: u32) -> (String, usize) {
+        match self {
+            NumberStrategy::Simple => simple_constant::for_num(num),
+            NumberStrategy::Product => product::for_num(num),
+            NumberStrategy::NearestPerfectSquare => nearest_perfect_square::for_num(num),
+        }
+    }
+}
 
-impl NumStrategy for SimpleConstant {
-    fn for_num(&self, num: u32) -> (String, usize) {
+mod simple_constant {
+    pub fn for_num(num: u32) -> (String, usize) {
         let mut to_r = String::new();
 
         for _ in 0..num {
@@ -36,10 +46,8 @@ impl NumStrategy for SimpleConstant {
     }
 }
 
-pub struct Product { }
-
-impl NumStrategy for Product {
-    fn for_num(&self, num: u32) -> (String, usize) {
+mod product {
+    pub fn for_num(num: u32) -> (String, usize) {
         // find the sqrt...
         let mut sqrt = (f64::from(num)).sqrt().floor() as u32;
 
@@ -68,10 +76,10 @@ impl NumStrategy for Product {
     }
 }
 
-pub struct NearestPerfectSquare { }
+mod nearest_perfect_square {
+    use super::{product, simple_constant};
 
-impl NumStrategy for NearestPerfectSquare {
-    fn for_num(&self, num: u32) -> (String, usize) {
+    pub fn for_num(num: u32) -> (String, usize) {
         // find the sqrt...
         let sqrt = (f64::from(num)).sqrt().floor() as u32;
 
@@ -80,12 +88,9 @@ impl NumStrategy for NearestPerfectSquare {
 
         // find the difference
         let diff = num - ps;
-        
-        let p = Product { };
-        let sc = SimpleConstant { };
 
-        let (mut code, _) = p.for_num(ps);
-        let (const_code, _) = sc.for_num(diff);
+        let (mut code, _) = product::for_num(ps);
+        let (const_code, _) = simple_constant::for_num(diff);
 
         code.push_str(const_code.as_str());
 
@@ -93,20 +98,16 @@ impl NumStrategy for NearestPerfectSquare {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
     use interp::BFEnv;
-    
+
     #[test]
     fn test_simple() {
-        let sc = SimpleConstant {};
-        
-        
         for i in 1..1000 {
             let mut env = BFEnv::new();
-            let (code, size) = sc.for_num(i);
+            let (code, size) = simple_constant::for_num(i);
             assert_eq!(size, 1);
 
             env.execute(code);
@@ -117,11 +118,9 @@ mod test {
 
     #[test]
     fn test_product() {
-        let p = Product {};
-
         for i in 1..1000 {
             let mut env = BFEnv::new();
-            let (code, size) = p.for_num(i);
+            let (code, size) = product::for_num(i);
             assert_eq!(size, 2);
 
             env.execute(code);
@@ -132,11 +131,9 @@ mod test {
 
     #[test]
     fn nps() {
-        let nps = NearestPerfectSquare { };
-
         for i in 1..1000 {
             let mut env = BFEnv::new();
-            let (code, size) = nps.for_num(i);
+            let (code, size) = nearest_perfect_square::for_num(i);
             assert_eq!(size, 2);
 
             println!("{} {}", i, code);
