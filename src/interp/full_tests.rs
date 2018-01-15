@@ -1,23 +1,23 @@
-// < begin copyright > 
+// < begin copyright >
 // Copyright Ryan Marcus 2017
-// 
+//
 // This file is part of basicaf.
-// 
+//
 // basicaf is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // basicaf is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with basicaf.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// < end copyright > 
- 
+//
+// < end copyright >
+
 #[cfg(test)]
 mod test {
     use compile;
@@ -66,7 +66,6 @@ mod test {
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
         assert_eq!(result, "5120");
-        
     }
 
     #[test]
@@ -82,11 +81,10 @@ mod test {
 103 END
 "#;
 
-        
         let bf = compile::compile(String::from(program), false, false, true);
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
-        assert_eq!(result, "\n\nLook ma, a subroutine!\n\nX is now: 6\n");     
+        assert_eq!(result, "\n\nLook ma, a subroutine!\n\nX is now: 6\n");
     }
 
     #[test]
@@ -104,7 +102,7 @@ mod test {
         let bf = compile::compile(String::from(program), false, false, true);
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
-        assert_eq!(result, "5 times 3 is 15\n5 times 4 is 20\n5 times 5 is 25\n5 times 6 is 30\n\n6 times 3 is 18\n6 times 4 is 24\n6 times 5 is 30\n6 times 6 is 36\n\n7 times 3 is 21\n7 times 4 is 28\n7 times 5 is 35\n7 times 6 is 42\n\n"); 
+        assert_eq!(result, "5 times 3 is 15\n5 times 4 is 20\n5 times 5 is 25\n5 times 6 is 30\n\n6 times 3 is 18\n6 times 4 is 24\n6 times 5 is 30\n6 times 6 is 36\n\n7 times 3 is 21\n7 times 4 is 28\n7 times 5 is 35\n7 times 6 is 42\n\n");
     }
 
     #[test]
@@ -124,9 +122,9 @@ mod test {
         let bf = compile::compile(String::from(program), false, false, true);
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
-        assert_eq!(result, "12"); 
+        assert_eq!(result, "12");
     }
-   
+
     #[test]
     fn collatz_test() {
         let program = r#"
@@ -189,7 +187,7 @@ mod test {
         let bf = compile::compile(String::from(program), false, false, true);
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
-        assert_eq!(result, out); 
+        assert_eq!(result, out);
     }
 
     #[test]
@@ -210,8 +208,7 @@ mod test {
         let bf = compile::compile(String::from(program), false, false, true);
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
-        assert_eq!(result, "7\n9\n11\n13\n15\n"); 
-        
+        assert_eq!(result, "7\n9\n11\n13\n15\n");
     }
 
     #[test]
@@ -226,7 +223,7 @@ mod test {
         let bf = compile::compile(String::from(program), false, false, true);
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
-        assert_eq!(result, "1 2 3"); 
+        assert_eq!(result, "1 2 3");
     }
 
     #[test]
@@ -242,7 +239,7 @@ mod test {
         let bf = compile::compile(String::from(program), false, false, true);
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
-        assert_eq!(result, "1 2 3"); 
+        assert_eq!(result, "1 2 3");
     }
 
     #[test]
@@ -259,7 +256,7 @@ mod test {
         let bf = compile::compile(String::from(program), false, false, true);
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
-        assert_eq!(result, "3 5 7"); 
+        assert_eq!(result, "3 5 7");
     }
 
     #[test]
@@ -278,8 +275,7 @@ mod test {
         let bf = compile::compile(String::from(program), false, false, true);
         let mut interp = BFEnv::new();
         let result = interp.execute(bf);
-        assert_eq!(result, " in sub Again! in sub Done."); 
-        
+        assert_eq!(result, " in sub Again! in sub Done.");
     }
-    
+
 }

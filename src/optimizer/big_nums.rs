@@ -1,28 +1,28 @@
-// < begin copyright > 
+// < begin copyright >
 // Copyright Ryan Marcus 2017
-// 
+//
 // This file is part of basicaf.
-// 
+//
 // basicaf is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // basicaf is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with basicaf.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// < end copyright > 
- 
+//
+// < end copyright >
+
 pub trait NumStrategy {
     fn for_num(&self, num: u32) -> (String, usize);
 }
 
-pub struct SimpleConstant { }
+pub struct SimpleConstant {}
 
 impl NumStrategy for SimpleConstant {
     fn for_num(&self, num: u32) -> (String, usize) {
@@ -36,7 +36,7 @@ impl NumStrategy for SimpleConstant {
     }
 }
 
-pub struct Product { }
+pub struct Product {}
 
 impl NumStrategy for Product {
     fn for_num(&self, num: u32) -> (String, usize) {
@@ -68,7 +68,7 @@ impl NumStrategy for Product {
     }
 }
 
-pub struct NearestPerfectSquare { }
+pub struct NearestPerfectSquare {}
 
 impl NumStrategy for NearestPerfectSquare {
     fn for_num(&self, num: u32) -> (String, usize) {
@@ -80,9 +80,9 @@ impl NumStrategy for NearestPerfectSquare {
 
         // find the difference
         let diff = num - ps;
-        
-        let p = Product { };
-        let sc = SimpleConstant { };
+
+        let p = Product {};
+        let sc = SimpleConstant {};
 
         let (mut code, _) = p.for_num(ps);
         let (const_code, _) = sc.for_num(diff);
@@ -93,17 +93,15 @@ impl NumStrategy for NearestPerfectSquare {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
     use interp::BFEnv;
-    
+
     #[test]
     fn test_simple() {
         let sc = SimpleConstant {};
-        
-        
+
         for i in 1..1000 {
             let mut env = BFEnv::new();
             let (code, size) = sc.for_num(i);
@@ -132,7 +130,7 @@ mod test {
 
     #[test]
     fn nps() {
-        let nps = NearestPerfectSquare { };
+        let nps = NearestPerfectSquare {};
 
         for i in 1..1000 {
             let mut env = BFEnv::new();

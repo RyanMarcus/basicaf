@@ -1,30 +1,30 @@
-// < begin copyright > 
+// < begin copyright >
 // Copyright Ryan Marcus 2017
-// 
+//
 // This file is part of basicaf.
-// 
+//
 // basicaf is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // basicaf is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with basicaf.  If not, see <http://www.gnu.org/licenses/>.
-// 
-// < end copyright > 
+//
+// < end copyright >
 
 #![allow(unknown_lints)] // for clippy
-#![allow(explicit_iter_loop,needless_return)]
+#![allow(explicit_iter_loop, needless_return)]
 
+extern crate clap;
 #[macro_use]
 extern crate nom;
 extern crate unescape;
-extern crate clap;
 
 mod parser;
 mod codegen;
@@ -36,11 +36,9 @@ mod compile;
 use std::fs::File;
 use std::io::prelude::*;
 
-use clap::{Arg, App};
-
+use clap::{App, Arg};
 
 fn main() {
-
     let matches = App::new("BASICAF")
         .version("0.1.2")
         .author("Ryan Marcus <ryan@ryanmarc.us>")
@@ -91,7 +89,6 @@ fn main() {
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file!");
 
-
     if execute {
         let mut interp = interp::BFEnv::new();
         let result = interp.execute(contents);
@@ -102,13 +99,8 @@ fn main() {
     let s = if gv {
         compile::to_graphviz(contents)
     } else {
-        compile::compile(contents, sem_comments,
-                         ir_comments,
-                         !no_opt)
+        compile::compile(contents, sem_comments, ir_comments, !no_opt)
     };
-    
-    
-    println!("{}", s);
-    
-}
 
+    println!("{}", s);
+}
