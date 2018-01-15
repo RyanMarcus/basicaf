@@ -1,38 +1,38 @@
-// < begin copyright >
+// < begin copyright > 
 // Copyright Ryan Marcus 2017
-//
+// 
 // This file is part of basicaf.
-//
+// 
 // basicaf is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
+// 
 // basicaf is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with basicaf.  If not, see <http://www.gnu.org/licenses/>.
-//
-// < end copyright >
-
+// 
+// < end copyright > 
+ 
 use std::char;
-use std::mem::drop;
+use std::mem::{drop};
 
 mod full_tests;
 
 pub struct BFEnv {
     data: Vec<u32>,
-    pt: usize,
+    pt: usize
 }
 
 impl BFEnv {
     pub fn new() -> BFEnv {
         let mut to_r = BFEnv {
             data: Vec::new(),
-            pt: 0,
+            pt: 0
         };
 
         to_r.data.push(0);
@@ -41,31 +41,35 @@ impl BFEnv {
 
     fn execute_single(&mut self, instruction: char) -> Option<String> {
         match instruction {
-            '+' => self.data[self.pt] += 1,
+            '+' => {
+                self.data[self.pt] += 1
+            },
 
-            '-' => self.data[self.pt] -= 1,
+            '-' => {
+                self.data[self.pt] -= 1
+            },
 
             '.' => {
                 return Some(char::from_u32(self.data[self.pt]).unwrap().to_string());
-            }
+            },
 
             '>' => {
                 self.pt += 1;
-
+                
                 if self.pt >= self.data.len() {
                     self.data.push(0);
-                }
-            }
+                }                
+            },
 
             '<' => {
                 if self.pt == 0 {
                     panic!("Trying to move past the zero element!");
                 }
-
+                
                 self.pt -= 1;
-            }
+            },
 
-            _ => {}
+            _ => { }
         };
 
         return None;
@@ -78,7 +82,7 @@ impl BFEnv {
             count += match *item {
                 '[' => 1,
                 ']' => -1,
-                _ => 0,
+                _ => 0
             };
 
             if count == 0 {
@@ -86,10 +90,8 @@ impl BFEnv {
             }
         }
 
-        panic!(
-            "Could not find matching close bracket for opening bracket at position {}",
-            open
-        );
+        panic!("Could not find matching close bracket for opening bracket at position {}",
+               open);
     }
 
     fn find_matching_open(close: usize, prgm: &[char]) -> usize {
@@ -99,7 +101,7 @@ impl BFEnv {
             count += match prgm[pos] {
                 ']' => 1,
                 '[' => -1,
-                _ => 0,
+                _ => 0
             };
 
             if count == 0 {
@@ -107,10 +109,8 @@ impl BFEnv {
             }
         }
 
-        panic!(
-            "Could not find matching open bracket for closing bracket at position {}",
-            close
-        );
+        panic!("Could not find matching open bracket for closing bracket at position {}",
+               close);
     }
 
     pub fn execute(&mut self, source: String) -> String {
@@ -118,14 +118,14 @@ impl BFEnv {
         let program = {
             let mut p = Vec::new();
             p.extend(source.chars());
-
+            
             // there doesn't seem to be a `into_chars`, so we will
             // manually drop source here.
             drop(source);
-
+            
             p
         };
-
+        
         let mut pc = 0;
 
         while pc < program.len() {
@@ -136,7 +136,7 @@ impl BFEnv {
                     } else {
                         pc += 1;
                     }
-                }
+                },
 
                 ']' => {
                     if self.data[self.pt] != 0 {
@@ -144,15 +144,15 @@ impl BFEnv {
                     } else {
                         pc += 1;
                     }
-                }
+                },
 
                 _ => {
                     let res = self.execute_single(program[pc]);
-
+                    
                     if let Some(s) = res {
                         result.push_str(s.as_str());
                     }
-
+                    
                     pc += 1;
                 }
             }
@@ -175,7 +175,7 @@ impl BFEnv {
 #[cfg(test)]
 mod test {
     use super::*;
-
+    
     #[test]
     fn simple_test() {
         let mut interp = BFEnv::new();
@@ -201,5 +201,6 @@ mod test {
         assert_eq!(interp.data[0], 497664);
         assert_eq!(interp.data[1], 0);
         assert_eq!(interp.data[2], 0);
+
     }
 }

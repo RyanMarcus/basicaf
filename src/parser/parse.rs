@@ -1,29 +1,30 @@
-// < begin copyright >
+// < begin copyright > 
 // Copyright Ryan Marcus 2017
-//
+// 
 // This file is part of basicaf.
-//
+// 
 // basicaf is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
+// 
 // basicaf is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with basicaf.  If not, see <http://www.gnu.org/licenses/>.
-//
-// < end copyright >
-use nom::{alphanumeric, digit, line_ending, not_line_ending, IResult};
+// 
+// < end copyright > 
+use nom::{digit,not_line_ending,line_ending,alphanumeric, IResult};
 use std::str;
 use std::str::FromStr;
 
-use parser::structs::{DBArrayDef, DBCommand, DBExpr, DBLetTarget, DBStmt};
+use parser::structs::{DBCommand, DBArrayDef, DBStmt, DBExpr, DBLetTarget};
 use parser::ast::{Expr, OpCode};
 use unescape::unescape;
+
 
 // parses a >= 0 integer value, like a line number
 named!(line_number<&[u8], u32>,
@@ -38,6 +39,7 @@ named!(db_float<&[u8], f32>,
            map_res!(is_a_s!("0123456789.-"), str::from_utf8),
            FromStr::from_str)
        );
+
 
 // parses a function or variable name
 named!(db_name<&[u8], String>,
@@ -68,6 +70,7 @@ named!(ast_term<&[u8], Expr>,
        alt!(
            complete!(delimited!(tag!("("), ast_expr, tag!(")")))
                => {|x| Expr::E(Box::new(x))} |
+           
            complete!(db_array_dim) => { |x| Expr::A(x) } |
            complete!(line_number) => { |x| Expr::N(x as i32) } |
            complete!(db_name) => { |x| Expr::V(x) }
@@ -108,6 +111,7 @@ named!(db_expr<&[u8], DBExpr>,
                    )
                )
        );
+             
 
 // parses an array dimension specifier, like D(2, 5)
 named!(db_array_dim<&[u8], DBArrayDef>,
@@ -116,11 +120,14 @@ named!(db_array_dim<&[u8], DBArrayDef>,
                >> tag!("(")
                >> dims: separated_nonempty_list!(ws!(tag!(",")),
                                                  ast_expr)
+                                                 
                >> tag!(")")
                >> (DBArrayDef { varname: name,
                                 dims: dims } )
+                                          
            )
        );
+
 
 // parses a def statement, like DEF f(X) = 5 * X
 named!(db_def_stmt<&[u8], DBStmt>,
@@ -138,6 +145,7 @@ named!(db_def_stmt<&[u8], DBStmt>,
                                 expr: expr} )
                )
        );
+
 
 // parses a dim statement, like DIM F(5, 2), D(4)
 named!(db_dim_stmt<&[u8], DBStmt>,
@@ -198,6 +206,7 @@ named!(db_next_stmt<&[u8], DBStmt>,
                >> (DBStmt::NEXT{ varname: var })
                )
        );
+
 
 // parses a GOSUB statement, like GOSUB 15
 named!(db_gosub_stmt<&[u8], DBStmt>,
@@ -310,6 +319,7 @@ named!(db_rem_stmt<&[u8], DBStmt>,
                >> ( DBStmt::REM )
                )
        );
+                                        
 
 // parses any statement
 named!(db_stmt<&[u8], DBStmt>,
@@ -332,6 +342,7 @@ named!(db_stmt<&[u8], DBStmt>,
                )
        );
 
+
 // parses any command (a line number and a statement)
 named!(db_command<&[u8], DBCommand>,
        dbg_dmp!(do_parse!(
@@ -340,6 +351,8 @@ named!(db_command<&[u8], DBCommand>,
                >> (DBCommand{ ln : lnp,
                               cmd: cmdp,
                               data: Vec::new() } )
+
+               
                ))
        );
 
@@ -353,18 +366,24 @@ named!(db_prgm<&[u8], Vec<DBCommand> >,
            )
        );
 
+
 pub fn parse_bytes(to_parse: &[u8]) -> Vec<DBCommand> {
+    
     let res = match db_prgm(to_parse) {
         IResult::Done(_, value) => value,
         IResult::Error(err) => {
-            println!("Err {:?}", err);
+            println!("Err {:?}",err);
             panic!()
-        }
+        },
         IResult::Incomplete(needed) => {
-            println!("Needed {:?}", needed);
+            println!("Needed {:?}",needed);
             panic!()
         }
     };
 
     return res;
+    
 }
+
+
+
