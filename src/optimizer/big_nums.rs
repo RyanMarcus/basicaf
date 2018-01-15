@@ -19,13 +19,29 @@
 // < end copyright >
 
 pub trait NumStrategy {
-    fn for_num(&self, num: u32) -> (String, usize);
+    fn for_num(num: u32) -> (String, usize);
+}
+
+pub enum NumberStrategy {
+    Simple,
+    Product,
+    NearestPerfectSquare,
+}
+
+impl NumberStrategy {
+    pub fn for_num(&self, num: u32) -> (String, usize) {
+        match self {
+            NumberStrategy::Simple => SimpleConstant::for_num(num),
+            NumberStrategy::Product => Product::for_num(num),
+            NumberStrategy::NearestPerfectSquare => NearestPerfectSquare::for_num(num),
+        }
+    }
 }
 
 pub struct SimpleConstant {}
 
 impl NumStrategy for SimpleConstant {
-    fn for_num(&self, num: u32) -> (String, usize) {
+    fn for_num(num: u32) -> (String, usize) {
         let mut to_r = String::new();
 
         for _ in 0..num {
@@ -39,7 +55,7 @@ impl NumStrategy for SimpleConstant {
 pub struct Product {}
 
 impl NumStrategy for Product {
-    fn for_num(&self, num: u32) -> (String, usize) {
+    fn for_num(num: u32) -> (String, usize) {
         // find the sqrt...
         let mut sqrt = (f64::from(num)).sqrt().floor() as u32;
 
@@ -71,7 +87,7 @@ impl NumStrategy for Product {
 pub struct NearestPerfectSquare {}
 
 impl NumStrategy for NearestPerfectSquare {
-    fn for_num(&self, num: u32) -> (String, usize) {
+    fn for_num(num: u32) -> (String, usize) {
         // find the sqrt...
         let sqrt = (f64::from(num)).sqrt().floor() as u32;
 
@@ -84,8 +100,8 @@ impl NumStrategy for NearestPerfectSquare {
         let p = Product {};
         let sc = SimpleConstant {};
 
-        let (mut code, _) = p.for_num(ps);
-        let (const_code, _) = sc.for_num(diff);
+        let (mut code, _) = Product::for_num(ps);
+        let (const_code, _) = SimpleConstant::for_num(diff);
 
         code.push_str(const_code.as_str());
 
@@ -100,11 +116,9 @@ mod test {
 
     #[test]
     fn test_simple() {
-        let sc = SimpleConstant {};
-
         for i in 1..1000 {
             let mut env = BFEnv::new();
-            let (code, size) = sc.for_num(i);
+            let (code, size) = SimpleConstant::for_num(i);
             assert_eq!(size, 1);
 
             env.execute(code);
@@ -115,11 +129,9 @@ mod test {
 
     #[test]
     fn test_product() {
-        let p = Product {};
-
         for i in 1..1000 {
             let mut env = BFEnv::new();
-            let (code, size) = p.for_num(i);
+            let (code, size) = Product::for_num(i);
             assert_eq!(size, 2);
 
             env.execute(code);
@@ -130,11 +142,9 @@ mod test {
 
     #[test]
     fn nps() {
-        let nps = NearestPerfectSquare {};
-
         for i in 1..1000 {
             let mut env = BFEnv::new();
-            let (code, size) = nps.for_num(i);
+            let (code, size) = NearestPerfectSquare::for_num(i);
             assert_eq!(size, 2);
 
             println!("{} {}", i, code);

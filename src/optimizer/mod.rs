@@ -20,15 +20,18 @@
 
 mod big_nums;
 
-use self::big_nums::{NearestPerfectSquare, NumStrategy, Product, SimpleConstant};
+use self::big_nums::NumberStrategy;
 
 pub fn optimized_constant(num: u32) -> (String, usize) {
     if num == 0 {
         return (String::from(""), 1);
     }
 
-    let optimizers: Vec<&NumStrategy> =
-        vec![&SimpleConstant {}, &Product {}, &NearestPerfectSquare {}];
+    let optimizers: Vec<NumberStrategy> = vec![
+        NumberStrategy::Simple,
+        NumberStrategy::Product,
+        NumberStrategy::NearestPerfectSquare,
+    ];
 
     let best = optimizers
         .iter()
