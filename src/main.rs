@@ -20,7 +20,6 @@
 
 #![allow(unknown_lints)] // for clippy
 #![allow(explicit_iter_loop, needless_return)]
-#![feature(match_default_bindings)]
 
 extern crate clap;
 #[macro_use]

@@ -27,9 +27,9 @@ pub enum NumberStrategy {
 impl NumberStrategy {
     pub fn for_num(&self, num: u32) -> (String, usize) {
         match self {
-            NumberStrategy::Simple => simple_constant::for_num(num),
-            NumberStrategy::Product => product::for_num(num),
-            NumberStrategy::NearestPerfectSquare => nearest_perfect_square::for_num(num),
+            &NumberStrategy::Simple => simple_constant::for_num(num),
+            &NumberStrategy::Product => product::for_num(num),
+            &NumberStrategy::NearestPerfectSquare => nearest_perfect_square::for_num(num),
         }
     }
 }
