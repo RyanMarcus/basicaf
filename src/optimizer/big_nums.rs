@@ -18,10 +18,6 @@
 //
 // < end copyright >
 
-pub trait NumStrategy {
-    fn for_num(num: u32) -> (String, usize);
-}
-
 pub enum NumberStrategy {
     Simple,
     Product,
@@ -31,17 +27,15 @@ pub enum NumberStrategy {
 impl NumberStrategy {
     pub fn for_num(&self, num: u32) -> (String, usize) {
         match self {
-            NumberStrategy::Simple => SimpleConstant::for_num(num),
-            NumberStrategy::Product => Product::for_num(num),
-            NumberStrategy::NearestPerfectSquare => NearestPerfectSquare::for_num(num),
+            NumberStrategy::Simple => simple_constant::for_num(num),
+            NumberStrategy::Product => product::for_num(num),
+            NumberStrategy::NearestPerfectSquare => nearest_perfect_square::for_num(num),
         }
     }
 }
 
-pub struct SimpleConstant {}
-
-impl NumStrategy for SimpleConstant {
-    fn for_num(num: u32) -> (String, usize) {
+mod simple_constant {
+    pub fn for_num(num: u32) -> (String, usize) {
         let mut to_r = String::new();
 
         for _ in 0..num {
@@ -52,10 +46,8 @@ impl NumStrategy for SimpleConstant {
     }
 }
 
-pub struct Product {}
-
-impl NumStrategy for Product {
-    fn for_num(num: u32) -> (String, usize) {
+mod product {
+    pub fn for_num(num: u32) -> (String, usize) {
         // find the sqrt...
         let mut sqrt = (f64::from(num)).sqrt().floor() as u32;
 
@@ -84,10 +76,10 @@ impl NumStrategy for Product {
     }
 }
 
-pub struct NearestPerfectSquare {}
+mod nearest_perfect_square {
+    use super::{product, simple_constant};
 
-impl NumStrategy for NearestPerfectSquare {
-    fn for_num(num: u32) -> (String, usize) {
+    pub fn for_num(num: u32) -> (String, usize) {
         // find the sqrt...
         let sqrt = (f64::from(num)).sqrt().floor() as u32;
 
@@ -97,11 +89,8 @@ impl NumStrategy for NearestPerfectSquare {
         // find the difference
         let diff = num - ps;
 
-        let p = Product {};
-        let sc = SimpleConstant {};
-
-        let (mut code, _) = Product::for_num(ps);
-        let (const_code, _) = SimpleConstant::for_num(diff);
+        let (mut code, _) = product::for_num(ps);
+        let (const_code, _) = simple_constant::for_num(diff);
 
         code.push_str(const_code.as_str());
 
@@ -118,7 +107,7 @@ mod test {
     fn test_simple() {
         for i in 1..1000 {
             let mut env = BFEnv::new();
-            let (code, size) = SimpleConstant::for_num(i);
+            let (code, size) = simple_constant::for_num(i);
             assert_eq!(size, 1);
 
             env.execute(code);
@@ -131,7 +120,7 @@ mod test {
     fn test_product() {
         for i in 1..1000 {
             let mut env = BFEnv::new();
-            let (code, size) = Product::for_num(i);
+            let (code, size) = product::for_num(i);
             assert_eq!(size, 2);
 
             env.execute(code);
@@ -144,7 +133,7 @@ mod test {
     fn nps() {
         for i in 1..1000 {
             let mut env = BFEnv::new();
-            let (code, size) = NearestPerfectSquare::for_num(i);
+            let (code, size) = nearest_perfect_square::for_num(i);
             assert_eq!(size, 2);
 
             println!("{} {}", i, code);
